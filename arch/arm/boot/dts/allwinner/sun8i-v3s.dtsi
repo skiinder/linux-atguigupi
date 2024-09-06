@@ -657,13 +657,13 @@
 						remote-endpoint = <&mipi_csi2_out_csi0>;
 					};
 				};
-				port@2 {
-					reg = <2>;
+				// port@2 {
+				// 	reg = <2>;
 
-					csi0_out_isp: endpoint {
-						remote-endpoint = <&isp_in_csi0>;
-					};
-				};
+				// 	csi0_out_isp: endpoint {
+				// 		remote-endpoint = <&isp_in_csi0>;
+				// 	};
+				// };
 			};
 		};
 
@@ -739,13 +739,13 @@
 				#address-cells = <1>;
 				#size-cells = <0>;
 
-				port@0 {
-					reg = <0>;
+				// port@0 {
+				// 	reg = <0>;
 
-					isp_in_csi0: endpoint {
-						remote-endpoint = <&csi0_out_isp>;
-					};
-				};
+				// 	isp_in_csi0: endpoint {
+				// 		remote-endpoint = <&csi0_out_isp>;
+				// 	};
+				// };
 			};
 		};
 	};

@@ -410,6 +410,7 @@ static void goodix_ts_report_touch_8b(struct goodix_ts_data *ts, u8 *coor_data)
 	input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, true);
 	touchscreen_report_pos(ts->input_dev, &ts->prop,
 			       input_x, input_y, true);
+	dev_info(&ts->input_dev->dev, "8b report x: %d, y: %d\n", input_x, input_y);
 	input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, input_w);
 	input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, input_w);
 }
@@ -1174,6 +1175,7 @@ retry_read_config:
 
 	/* Try overriding touchscreen parameters via device properties */
 	touchscreen_parse_properties(ts->input_dev, true, &ts->prop);
+	ts->max_touch_num = 5;
 
 	if (!ts->prop.max_x || !ts->prop.max_y || !ts->max_touch_num) {
 		if (!ts->reset_controller_at_probe &&
@@ -1237,7 +1239,15 @@ retry_read_config:
 	if (error)
 		return error;
 
-	ts->irq_flags = goodix_irq_flags[ts->int_trigger_type] | IRQF_ONESHOT;
+	unsigned char input_method;
+	goodix_i2c_read(ts->client, 0x804D, &input_method, 1);
+	input_method &= 0b11111100;
+	input_method |= 0b00000001;
+	goodix_i2c_write(ts->client, 0x804D, &input_method, 1);
+	input_method &= 0x3;
+
+	ts->irq_flags = goodix_irq_flags[input_method] | IRQF_ONESHOT;
+	dev_info(&ts->client->dev, "IRQ Type: %lx", ts->irq_flags);
 	error = goodix_request_irq(ts);
 	if (error) {
 		dev_err(&ts->client->dev, "request IRQ failed: %d\n", error);

@@ -11,20 +11,18 @@
 	
 	aliases {
 		serial0 = &uart0;
-		serial2 = &uart2;
+		serial1 = &uart1;
 		// 给以太网取别名
 		ethernet0 = &emac;
 		// 给SPI起别名
 		spi0 = &spi0;
 		i2c0 = &i2c0;
-		i2c1 = &i2c1;
 	};
 	
 	chosen {
 		stdout-path = "serial0:115200n8";
 	};
 	
-	// 加入低速USB设备支持，例如鼠标、键盘
 	soc {
 		ehci0: usb@01c1a000 {
 			compatible = "allwinner,sun8i-v3s-ehci", "generic-ehci";
@@ -64,59 +62,34 @@
 	};
 	
 	panel: panel {
-		compatible = "sh,cj050qgh50_05442y", "simple-panel";
+		compatible = "panel-dpi";
 		backlight = <&backlight>;
+		height-mm = <54>;
+		width-mm = <96>;
 		
 		port {
 			panel_input: endpoint {
 				remote-endpoint = <&tcon0_out_lcd>;
 			};
 		};
-		
-		display-timings {
-			timing0: timing0 {
-				clock-frequency = <60000000>;
-				hactive = <800>;
-				vactive = <480>;
-				
-				hfront-porch = <209>;
-				hsync-len = <30>;
-				hback-porch = <16>;
-				
-				vback-porch = <22>;
-				vsync-len = <1>;
-				vfront-porch = <22>;
-				
-				hsync-active = <0>;
-				vsync-active = <0>;
-				de-active = <1>;
-				pixelclk-active = <0>;
-				
-			};
+		panel-timing {
+			clock-frequency = <9000000>;
+			hactive = <480>;
+			vactive = <272>;
+			
+			hfront-porch = <8>;
+			hsync-len = <4>;
+			hback-porch = <43>;
+			
+			vback-porch = <12>;
+			vsync-len = <4>;
+			vfront-porch = <8>;
+			
+			hsync-active = <0>;
+			vsync-active = <0>;
+			de-active = <1>;
+			pixelclk-active = <1>;
 		};
-	};
-	imx219_vana_2v8: 2p8v {
-		compatible = "regulator-fixed";
-		regulator-name = "camera_vana";
-		regulator-min-microvolt = <2800000>;
-		regulator-max-microvolt = <2800000>;
-		regulator-always-on;
-	};
-	
-	imx219_vdig_1v8: 1p8v {
-		compatible = "regulator-fixed";
-		regulator-name = "camera_vdig";
-		regulator-min-microvolt = <1500000>;
-		regulator-max-microvolt = <1500000>;
-		regulator-always-on;
-	};
-	
-	imx219_vddl_1v2: 1p2v {
-		compatible = "regulator-fixed";
-		regulator-name = "camera_vddl";
-		regulator-min-microvolt = <1200000>;
-		regulator-max-microvolt = <1200000>;
-		regulator-always-on;
 	};
 	
 	reserved-memory {
@@ -128,53 +101,6 @@
 			reusable;
 			reg = <0x42a00000 0x1000000>;
 			linux,cma-default;
-		};
-	};
-};
-
-&csi0 {
-	status = "okay";
-};
-
-&mipi_csi2 {
-	status = "okay";
-};
-
-&mipi_csi2_in {
-	mipi_csi2_in_sensor: endpoint {
-		data-lanes = <1 2>;
-		clock-lanes = <0>;
-		remote-endpoint = <&imx219_out_mipi_csi2>;
-	};
-};
-
-&dphy {
-	status = "okay";
-};
-
-&isp {
-	status = "okay";
-};
-
-&i2c1 {
-	status = "okay";
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c1_pe_pins>;
-	imx219: sensor@10 {
-		compatible = "sony,imx219";
-		reg = <0x10>;
-		clocks = <&ccu CLK_CSI0_MCLK>;
-		VANA-supply = <&imx219_vana_2v8>;   /* 2.8v */
-		VDIG-supply = <&imx219_vdig_1v8>;   /* 1.8v */
-		VDDL-supply = <&imx219_vddl_1v2>;   /* 1.2v */
-		
-		port {
-			imx219_out_mipi_csi2: endpoint {
-				remote-endpoint = <&mipi_csi2_in_sensor>;
-				data-lanes = <1 2>;
-				clock-noncontinuous;
-				link-frequencies = /bits/ 64 <456000000>;
-			};
 		};
 	};
 };
@@ -244,19 +170,19 @@
 	status = "okay";
 };
 
-&uart2 {
-	pinctrl-0 = <&uart2_pins>;
+&uart1 {
+	pinctrl-0 = <&uart1_pins>;
 	pinctrl-names = "default";
 	status = "okay";
 };
 
 &usb_otg {
-	dr_mode = "otg";
+	dr_mode = "host";
 	status = "okay";
 };
 
 &usbphy {
-	usb0_id_det-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;
+	// usb0_id_det-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 };
 
@@ -283,26 +209,27 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 			
-			partition-uboot {
+			uboot {
 				reg = <0x0 0x80000>;
 				read-only;
 			};
 			
-			partition-dtb {
+			dtb {
 				reg = <0x80000 0x8000>;
 				read-only;
 			};
 			
-			partition-kernel {
+			kernel {
 				reg = <0x88000 0x6F8000>;
 				read-only;
 			};
 			
-			partition-rootfs {
+			rootfs {
 				reg = <0x780000 0x1080000>;
 				read-only;
+				linux,rootfs;
 			};
-			partition-data {
+			data {
 				reg = <0x1800000 0x800000>;
 			};
 		};
@@ -311,16 +238,21 @@
 
 &i2c0 {
 	status = "okay";
-	ns2009: ns2009@48 {
-		compatible = "nsiway,ns2009";
-		reg = <0x48>;
+	gt911@14 {
+		compatible = "goodix,gt911";
+		reg = <0x14>;
+		interrupt-parent = <&pio>;
+		interrupts = <1 3 IRQ_TYPE_EDGE_FALLING>;
+		irq-gpios = <&pio 1 3 GPIO_ACTIVE_HIGH>;
+        reset-gpios = <&pio 1 2 GPIO_ACTIVE_HIGH>;
+
+		// 触摸屏配置
+		panel = <&panel>;
+		touchscreen-size-x = <480>;
+		touchscreen-size-y = <272>;
+		touchscreen-x-mm = <95>;
+		touchscreen-y-mm = <54>;
 	};
-	// gt911@5d {
-	// 	compatible = "goodix,gt911";
-	// 	reg = <0x5d>;
-	// 	interrupt-parent = <&pio>;
-	// 	interrupts = <0 0>;
-	// };
 };
 
 &de {
@@ -328,29 +260,17 @@
 };
 
 &pwm {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pwm0_pins>;
 	status = "okay";
 };
 
 &pio {
-	lcd_pins: lcd-pins {
-		pins = "PE0", "PE1", "PE2", "PE3", "PE4", "PE5",
-		"PE6", "PE7", "PE8", "PE9", "PE10", "PE11",
-		"PE12", "PE13", "PE14", "PE15", "PE16", "PE17",
-		"PE18", "PE19", "PE23", "PE24";
-		function = "lcd";
-	};
-	
-	pwm0_pins: pwm0-pins {
-		pins = "PB4";
-		function = "pwm0";
+	uart1_pins: uart1-pins {
+		pins = "PE21", "PE22";
+		function = "uart1";
 	};
 };
 
 &tcon0 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&lcd_pins>;
 	status = "okay";
 };
 
