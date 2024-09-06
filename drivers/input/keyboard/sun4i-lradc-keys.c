@@ -133,16 +133,12 @@ static irqreturn_t sun4i_lradc_irq(int irq, void *dev_id)
 			if (diff < closest) {
 				closest = diff;
 				keycode = lradc->chan0_map[i].keycode;
-#ifdef DEBUG_INPUT_KEY
-				dev_info(lradc_dev, "Debug: chan0_map %d V \n",
-					 lradc->chan0_map[i].voltage);
-#endif
 			}
 		}
 
 #ifdef DEBUG_INPUT_KEY
-		printk("Debug: volatile: %u V, adc: %d,ref volatage: %d button pressed\n",
-		       voltage, val, lradc->vref);
+		printk("Debug: volatile: %u V, adc: %d,ref volatage: %d button pressed: %d\n",
+		       voltage, val, lradc->vref, keycode);
 #endif
 		lradc->chan0_keycode = keycode;
 		input_report_key(lradc->input, lradc->chan0_keycode, 1);
