@@ -53,7 +53,6 @@
 	panel: panel {
 		compatible = "sh,cj050qgh50_05442y", "simple-panel";
 		backlight = <&backlight>;
-		connector-type = "DPI";
 		
 		port {
 			panel_input: endpoint {
