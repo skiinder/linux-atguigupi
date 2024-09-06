@@ -16,6 +16,7 @@
 		ethernet0 = &emac;
 		// 给SPI起别名
 		spi0 = &spi0;
+		i2c0 = &i2c0;
 	};
 	
 	chosen {
@@ -50,8 +51,9 @@
 	};
 	
 	panel: panel {
-		compatible = "vxt,vl050-8048nt-c01", "simple-panel";
+		compatible = "sh,cj050qgh50_05442y", "simple-panel";
 		backlight = <&backlight>;
+		connector-type = "DPI";
 		
 		port {
 			panel_input: endpoint {
@@ -61,7 +63,7 @@
 		
 		display-timings {
 			timing0: timing0 {
-				clock-frequency = <33000000>;
+				clock-frequency = <60000000>;
 				hactive = <800>;
 				vactive = <480>;
 				
