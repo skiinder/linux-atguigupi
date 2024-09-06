@@ -60,6 +60,7 @@
 #define	CHAN0_KEYDOWN_IRQ	BIT(1)
 #define CHAN0_DATA_IRQ		BIT(0)
 
+#define DEBUG_INPUT_KEY
 /* struct lradc_variant - Describe sun4i-a10-lradc-keys hardware variant
  * @divisor_numerator:		The numerator of lradc Vref internally divisor
  * @divisor_denominator:	The denominator of lradc Vref internally divisor
@@ -71,10 +72,9 @@ struct lradc_variant {
 	bool has_clock_reset;
 };
 
-static const struct lradc_variant lradc_variant_a10 = {
-	.divisor_numerator = 2,
-	.divisor_denominator = 3
-};
+static const struct lradc_variant lradc_variant_a10 = { .divisor_numerator = 2,
+							.divisor_denominator =
+								3 };
 
 static const struct lradc_variant r_lradc_variant_a83t = {
 	.divisor_numerator = 3,
@@ -106,12 +106,13 @@ struct sun4i_lradc_data {
 	u32 vref;
 };
 
+static struct device *lradc_dev;
 static irqreturn_t sun4i_lradc_irq(int irq, void *dev_id)
 {
 	struct sun4i_lradc_data *lradc = dev_id;
 	u32 i, ints, val, voltage, diff, keycode = 0, closest = 0xffffffff;
 
-	ints  = readl(lradc->base + LRADC_INTS);
+	ints = readl(lradc->base + LRADC_INTS);
 
 	/*
 	 * lradc supports only one keypress at a time, release does not give
@@ -132,9 +133,17 @@ static irqreturn_t sun4i_lradc_irq(int irq, void *dev_id)
 			if (diff < closest) {
 				closest = diff;
 				keycode = lradc->chan0_map[i].keycode;
+#ifdef DEBUG_INPUT_KEY
+				dev_info(lradc_dev, "Debug: chan0_map %d V \n",
+					 lradc->chan0_map[i].voltage);
+#endif
 			}
 		}
 
+#ifdef DEBUG_INPUT_KEY
+		printk("Debug: volatile: %u V, adc: %d,ref volatage: %d button pressed\n",
+		       voltage, val, lradc->vref);
+#endif
 		lradc->chan0_keycode = keycode;
 		input_report_key(lradc->input, lradc->chan0_keycode, 1);
 	}
@@ -171,7 +180,8 @@ static int sun4i_lradc_open(struct input_dev *dev)
 	 * stabilize on press, wait (1 + 1) * 4 ms for key release
 	 */
 	writel(FIRST_CONVERT_DLY(2) | LEVELA_B_CNT(1) | HOLD_EN(1) |
-		SAMPLE_RATE(0) | ENABLE(1), lradc->base + LRADC_CTRL);
+		       SAMPLE_RATE(0) | ENABLE(1),
+	       lradc->base + LRADC_CTRL);
 
 	writel(CHAN0_KEYUP_IRQ | CHAN0_KEYDOWN_IRQ, lradc->base + LRADC_INTC);
 
@@ -191,7 +201,8 @@ static void sun4i_lradc_close(struct input_dev *dev)
 
 	/* Disable lradc, leave other settings unchanged */
 	writel(FIRST_CONVERT_DLY(2) | LEVELA_B_CNT(1) | HOLD_EN(1) |
-		SAMPLE_RATE(2), lradc->base + LRADC_CTRL);
+		       SAMPLE_RATE(2),
+	       lradc->base + LRADC_CTRL);
 	writel(0, lradc->base + LRADC_INTC);
 
 	clk_disable_unprepare(lradc->clk);
@@ -258,6 +269,7 @@ static int sun4i_lradc_probe(struct platform_device *pdev)
 {
 	struct sun4i_lradc_data *lradc;
 	struct device *dev = &pdev->dev;
+	lradc_dev = &pdev->dev;
 	int error, i, irq;
 
 	lradc = devm_kzalloc(dev, sizeof(struct sun4i_lradc_data), GFP_KERNEL);
@@ -340,11 +352,11 @@ static int sun4i_lradc_probe(struct platform_device *pdev)
 
 static const struct of_device_id sun4i_lradc_of_match[] = {
 	{ .compatible = "allwinner,sun4i-a10-lradc-keys",
-		.data = &lradc_variant_a10 },
+	  .data = &lradc_variant_a10 },
 	{ .compatible = "allwinner,sun8i-a83t-r-lradc",
-		.data = &r_lradc_variant_a83t },
+	  .data = &r_lradc_variant_a83t },
 	{ .compatible = "allwinner,sun50i-r329-lradc",
-		.data = &lradc_variant_r329 },
+	  .data = &lradc_variant_r329 },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, sun4i_lradc_of_match);
