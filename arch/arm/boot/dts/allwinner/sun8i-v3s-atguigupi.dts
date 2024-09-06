@@ -54,7 +54,7 @@
 			resets = <&ccu RST_BUS_VE>;
 			allwinner,sram = <&ve_sram 1>;
 			status = "okay";
-		}; */		
+		}; */
 	};
 	backlight: backlight {
 		compatible = "pwm-backlight";
@@ -102,7 +102,7 @@
 		regulator-max-microvolt = <2800000>;
 		regulator-always-on;
 	};
-
+	
 	imx219_vdig_1v8: 1p8v {
 		compatible = "regulator-fixed";
 		regulator-name = "camera_vdig";
@@ -110,7 +110,7 @@
 		regulator-max-microvolt = <1500000>;
 		regulator-always-on;
 	};
-
+	
 	imx219_vddl_1v2: 1p2v {
 		compatible = "regulator-fixed";
 		regulator-name = "camera_vddl";
@@ -118,7 +118,7 @@
 		regulator-max-microvolt = <1200000>;
 		regulator-always-on;
 	};
-
+	
 	reserved-memory {
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -167,7 +167,7 @@
 		VANA-supply = <&imx219_vana_2v8>;   /* 2.8v */
 		VDIG-supply = <&imx219_vdig_1v8>;   /* 1.8v */
 		VDDL-supply = <&imx219_vddl_1v2>;   /* 1.2v */
-
+		
 		port {
 			imx219_out_mipi_csi2: endpoint {
 				remote-endpoint = <&mipi_csi2_in_sensor>;
@@ -283,31 +283,26 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 			
-			partition@0 {
-				label = "uboot";
+			partition-uboot {
 				reg = <0x0 0x80000>;
 				read-only;
 			};
 			
-			partition@80000 {
-				label = "dtb";
+			partition-dtb {
 				reg = <0x80000 0x8000>;
 				read-only;
 			};
 			
-			partition@88000 {
-				label = "kernel";
+			partition-kernel {
 				reg = <0x88000 0x6F8000>;
 				read-only;
 			};
 			
-			partition@780000 {
-				label = "rootfs";
+			partition-rootfs {
 				reg = <0x780000 0x1080000>;
 				read-only;
 			};
-			partition@1800000 {
-				label = "data";
+			partition-data {
 				reg = <0x1800000 0x800000>;
 			};
 		};
@@ -320,6 +315,12 @@
 		compatible = "nsiway,ns2009";
 		reg = <0x48>;
 	};
+	// gt911@5d {
+	// 	compatible = "goodix,gt911";
+	// 	reg = <0x5d>;
+	// 	interrupt-parent = <&pio>;
+	// 	interrupts = <0 0>;
+	// };
 };
 
 &de {
